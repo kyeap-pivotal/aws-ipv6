@@ -5,7 +5,7 @@ provider "aws" {
 
 variable "aws_region" {
   type    = "string"
-  default = "us-west-2"
+  default = "us-east-1"
 }
 
 variable "aws_profile" {
@@ -21,12 +21,12 @@ variable "key_name" {
 # Ubuntu AMIs from https://cloud-images.ubuntu.com/locator/ec2/
 variable "instance_ami" {
   type    = "string"
-  default = "ami-22741f5a" # Ubuntu 18.04 HVM/EBS in us-west-2
+  default = "ami-9887c6e7" # CentOS 7 (x86_64) - with Updates HVM in us-east-1
 }
 
 variable "instance_size" {
   type    = "string"
-  default = "t2.nano"
+  default = "r3.xlarge"
 }
 
 data "aws_availability_zones" "available" {}
@@ -129,7 +129,7 @@ resource "aws_route_table_association" "public_ipv6" {
   route_table_id = "${aws_route_table.ipv6_route_table.id}"
 }
 
-resource "aws_instance" "ipv6_instance" {
+resource "aws_instance" "ipv6_mdw" {
   ami           = "${var.instance_ami}"
   instance_type = "${var.instance_size}"
   key_name      = "${var.key_name}"
@@ -140,6 +140,21 @@ resource "aws_instance" "ipv6_instance" {
   user_data                   = "${data.template_file.userdata.rendered}"
 
   tags {
-    Name = "ipv6_instance"
+    Name = "ipv6_mdw"
+  }
+}
+
+resource "aws_instance" "ipv6_sdw1" {
+  ami           = "${var.instance_ami}"
+  instance_type = "${var.instance_size}"
+  key_name      = "${var.key_name}"
+  subnet_id     = "${aws_subnet.public_ipv6.id}"
+
+  vpc_security_group_ids      = ["${aws_security_group.ipv6_security.id}"]
+  associate_public_ip_address = true
+  user_data                   = "${data.template_file.userdata.rendered}"
+
+  tags {
+    Name = "ipv6_sdw1"
   }
 }
